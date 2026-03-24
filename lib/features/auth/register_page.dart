@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/auth_service.dart';
 
@@ -34,6 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmController.text;
@@ -47,13 +49,11 @@ class _RegisterPageState extends State<RegisterPage> {
         first.isEmpty ||
         last.isEmpty ||
         username.isEmpty) {
-      _toast(
-        'Renseignez l’email, le mot de passe, le prénom, le nom et le pseudo.',
-      );
+      _toast(l10n.registerFillRequired);
       return;
     }
     if (password != confirm) {
-      _toast('Les mots de passe ne correspondent pas.');
+      _toast(l10n.passwordsMismatch);
       return;
     }
 
@@ -71,12 +71,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (result.ok) {
       final msg = result.needsEmailConfirmation
-          ? 'Compte créé. Vérifiez votre boîte mail pour confirmer l’adresse.'
-          : 'Compte créé. Vous pouvez vous connecter.';
+          ? l10n.accountCreatedEmail
+          : l10n.accountCreatedOk;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       Navigator.of(context).pushReplacementNamed(AppRoutes.login);
     } else {
-      _toast(result.message ?? 'Inscription impossible.');
+      _toast(result.message ?? l10n.signupFailed);
     }
   }
 
@@ -87,13 +87,14 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     const cyan = Color(0xFF00BCD4);
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Créer un compte'),
+        title: Text(l10n.createAccount),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -105,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
               Icon(Icons.sports_soccer, size: 56, color: cyan),
               const SizedBox(height: 24),
               Text(
-                'Inscription joueur',
+                l10n.registerPlayerTitle,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -113,66 +114,66 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Créez votre compte pour rejoindre la communauté KickFlow.',
+                l10n.registerPlayerSubtitle,
                 style: TextStyle(color: Colors.white.withOpacity(0.8)),
               ),
               const SizedBox(height: 32),
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.email,
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.white54),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Mot de passe',
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.password,
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _confirmController,
-                decoration: const InputDecoration(
-                  labelText: 'Confirmer le mot de passe',
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.confirmPassword,
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Prénom',
-                  prefixIcon: Icon(Icons.person_outline, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.firstName,
+                  prefixIcon: const Icon(Icons.person_outline, color: Colors.white54),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nom',
-                  prefixIcon: Icon(Icons.badge_outlined, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.lastName,
+                  prefixIcon: const Icon(Icons.badge_outlined, color: Colors.white54),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Pseudo',
-                  prefixIcon: Icon(Icons.alternate_email, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.username,
+                  prefixIcon: const Icon(Icons.alternate_email, color: Colors.white54),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Téléphone (optionnel)',
-                  prefixIcon: Icon(Icons.phone_outlined, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.phoneOptional,
+                  prefixIcon: const Icon(Icons.phone_outlined, color: Colors.white54),
                 ),
                 keyboardType: TextInputType.phone,
               ),
@@ -187,17 +188,17 @@ class _RegisterPageState extends State<RegisterPage> {
                           width: 22,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text("S'inscrire"),
+                      : Text(l10n.signUp),
                 ),
               ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Déjà un compte ? ', style: TextStyle(color: Colors.white.withOpacity(0.8))),
+                  Text(l10n.alreadyHaveAccount, style: TextStyle(color: Colors.white.withOpacity(0.8))),
                   TextButton(
                     onPressed: _loading ? null : () => Navigator.of(context).pop(),
-                    child: const Text('Se connecter'),
+                    child: Text(l10n.signIn),
                   ),
                 ],
               ),

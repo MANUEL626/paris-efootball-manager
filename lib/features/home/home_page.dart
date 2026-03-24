@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
 import '../../core/routes/app_routes.dart';
 
 /// Tableau de bord (Accueil) : Arène SkillBet, 4 cartes, bannière.
@@ -16,6 +17,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Stack(
       children: [
         SingleChildScrollView(
@@ -25,6 +27,8 @@ class _HomePageState extends State<HomePage> {
             children: [
               if (_bannerVisible)
                 _TournamentBanner(
+                  title: l10n.tournamentBannerTitle,
+                  subtitle: l10n.tournamentBannerShort,
                   onClose: () => setState(() => _bannerVisible = false),
                 ),
               const SizedBox(height: 16),
@@ -43,15 +47,15 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Arène SkillBet',
+                l10n.homeArenaTitle,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Choisissez votre action',
+                l10n.homeChooseAction,
                 style: TextStyle(color: Colors.white.withOpacity(0.8)),
               ),
               const SizedBox(height: 24),
@@ -59,9 +63,8 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: _ActionCard(
-                      title: 'TROUVER DÉFI',
-                      subtitle:
-                          'Créez ou rejoignez un défi 1v1 et misez vos SkillCoins',
+                      title: l10n.cardFindChallenge,
+                      subtitle: l10n.cardFindChallengeSubtitle,
                       icon: Icons.sports_soccer,
                       color: Colors.red.shade700,
                       onTap: () =>
@@ -71,8 +74,8 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _ActionCard(
-                      title: 'HISTORIQUE',
-                      subtitle: 'Consultez l\'historique de tous vos défis',
+                      title: l10n.cardHistory,
+                      subtitle: l10n.cardHistorySubtitle,
                       icon: Icons.history,
                       color: Colors.green.shade700,
                       onTap: () =>
@@ -112,6 +115,11 @@ class _HomePageState extends State<HomePage> {
         ),
         if (_eventModalVisible)
           _EventModal(
+            eventTag: l10n.eventTag,
+            title: l10n.eventModalTitle,
+            body: l10n.eventModalBody,
+            viewTournamentsLabel: l10n.viewTournaments,
+            laterLabel: l10n.later,
             onClose: () => setState(() => _eventModalVisible = false),
             onTournaments: () {
               setState(() => _eventModalVisible = false);
@@ -124,8 +132,14 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _TournamentBanner extends StatelessWidget {
-  const _TournamentBanner({required this.onClose});
+  const _TournamentBanner({
+    required this.title,
+    required this.subtitle,
+    required this.onClose,
+  });
 
+  final String title;
+  final String subtitle;
   final VoidCallback onClose;
 
   @override
@@ -144,15 +158,15 @@ class _TournamentBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Tournoi Hebdomadaire - 100 000 FCFA',
-                  style: TextStyle(
+                Text(
+                  title,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  'Le grand tournoi commence vendredi ! Prix total : 100 000 FCFA. In...',
+                  subtitle,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 12,
@@ -259,8 +273,21 @@ class _ActionCard extends StatelessWidget {
 }
 
 class _EventModal extends StatelessWidget {
-  const _EventModal({required this.onClose, required this.onTournaments});
+  const _EventModal({
+    required this.eventTag,
+    required this.title,
+    required this.body,
+    required this.viewTournamentsLabel,
+    required this.laterLabel,
+    required this.onClose,
+    required this.onTournaments,
+  });
 
+  final String eventTag;
+  final String title;
+  final String body;
+  final String viewTournamentsLabel;
+  final String laterLabel;
   final VoidCallback onClose;
   final VoidCallback onTournaments;
 
@@ -282,13 +309,13 @@ class _EventModal extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.emoji_events, color: Colors.amber),
-                      SizedBox(width: 8),
+                      const Icon(Icons.emoji_events, color: Colors.amber),
+                      const SizedBox(width: 8),
                       Text(
-                        'ÉVÉNEMENT',
-                        style: TextStyle(
+                        eventTag,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -299,9 +326,9 @@ class _EventModal extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Tournoi Hebdomadaire - 100 000 FCFA',
-                style: TextStyle(
+              Text(
+                title,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -310,7 +337,7 @@ class _EventModal extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Le grand tournoi hebdomadaire commence vendredi ! Prix total : 100 000 FCFA. Inscriptions ouvertes dès maintenant. Ne rate pas cette opportunité !',
+                body,
                 style: TextStyle(color: Colors.white.withOpacity(0.9)),
                 textAlign: TextAlign.center,
               ),
@@ -319,7 +346,7 @@ class _EventModal extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: onTournaments,
-                  child: const Text('Voir les tournois'),
+                  child: Text(viewTournamentsLabel),
                 ),
               ),
               const SizedBox(height: 8),
@@ -327,7 +354,7 @@ class _EventModal extends StatelessWidget {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: onClose,
-                  child: const Text('Plus tard'),
+                  child: Text(laterLabel),
                 ),
               ),
             ],

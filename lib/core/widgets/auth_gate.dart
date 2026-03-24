@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/deep_link_handler.dart';
+import '../auth/profile_gate_navigation.dart';
 import '../routes/app_routes.dart';
-import '../services/auth_service.dart';
+import '../services/auth_service.dart' show AuthService, PlayerProfileResult;
+import '../../l10n/app_localizations.dart';
 
 /// Premier écran : deep link d’auth, puis session existante, sinon onboarding.
 class AuthGate extends StatefulWidget {
@@ -38,16 +40,52 @@ class _AuthGateState extends State<AuthGate> {
       return;
     }
 
-    if (!await AuthService.instance.isUserPlayer(session.user.id)) {
-      await Supabase.instance.client.auth.signOut();
+    final gate = await AuthService.instance.assertPlayerProfileWithRetries(
+      session.user.id,
+      context: 'auth_gate_cold_start',
+    );
+    if (gate == PlayerProfileResult.ok ||
+        gate == PlayerProfileResult.okNeedsParams) {
+      if (!mounted) return;
+      navigateAfterPlayerProfileCheck(
+        gate: gate,
+        navigatorKey: widget.navigatorKey,
+      );
+      return;
+    }
+    if (gate == PlayerProfileResult.notAllowed) {
+      await AuthService.signOutSafe();
       if (!mounted) return;
       widget.navigatorKey.currentState?.pushReplacementNamed(AppRoutes.login);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = widget.navigatorKey.currentContext;
+        if (ctx != null && ctx.mounted) {
+          final l10n = AppLocalizations.of(ctx);
+          if (l10n != null) {
+            ScaffoldMessenger.of(ctx).showSnackBar(
+              SnackBar(content: Text(l10n.profileNotAllowed)),
+            );
+          }
+        }
+      });
       return;
     }
 
-    // Session joueur : accueil direct (onboarding réservé aux non-connectés).
+    // Erreur RPC persistante : pas d’accès sans vérification → déconnexion + login.
+    await AuthService.signOutSafe();
     if (!mounted) return;
-    widget.navigatorKey.currentState?.pushReplacementNamed(AppRoutes.home);
+    widget.navigatorKey.currentState?.pushReplacementNamed(AppRoutes.login);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = widget.navigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        final l10n = AppLocalizations.of(ctx);
+        if (l10n != null) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(content: Text(l10n.profileCheckFailed)),
+          );
+        }
+      }
+    });
   }
 
   @override

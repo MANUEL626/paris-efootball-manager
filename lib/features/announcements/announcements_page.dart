@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
+
 /// Page Annonces : infos & nouveautés avec filtres.
 class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -16,7 +19,7 @@ class AnnouncementsPage extends StatelessWidget {
           children: [
             const Icon(Icons.campaign),
             const SizedBox(width: 8),
-            const Text('Annonces'),
+            Text(l10n.announcementsTitle),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -41,7 +44,7 @@ class AnnouncementsPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
-              'Infos & Nouveautés',
+              l10n.announcementsNews,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: 14,
@@ -53,13 +56,13 @@ class AnnouncementsPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _FilterChip(label: 'Tout', selected: true),
+                _FilterChip(label: l10n.filterAll, selected: true),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Nouveauté', selected: false),
+                _FilterChip(label: l10n.filterNews, selected: false),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Événement', selected: false),
+                _FilterChip(label: l10n.filterEvent, selected: false),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Info', selected: false),
+                _FilterChip(label: l10n.filterInfo, selected: false),
               ],
             ),
           ),
@@ -67,30 +70,30 @@ class AnnouncementsPage extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
-              children: const [
+              children: [
                 _AnnouncementCard(
-                  type: 'NEW Nouveauté',
-                  title: 'Bienvenue sur KickFlow !',
-                  body:
-                      'Merci de rejoindre la communauté KickFlow ! Défie tes amis, participe à des tournois et gagne de l\'argent réel en jouant à eFootball.',
-                  time: 'Il y a 2h',
+                  type: l10n.badgeNew,
+                  title: l10n.announcementWelcomeTitle,
+                  body: l10n.announcementWelcomeBody,
+                  time: l10n.time2h,
                   borderColor: Colors.pink,
+                  badgeUpper: l10n.badgeNewUpper,
                 ),
                 _AnnouncementCard(
-                  type: 'Événement',
-                  title: 'Tournoi Hebdomadaire - 100 000 FCFA',
-                  body:
-                      'Le grand tournoi hebdomadaire commence vendredi ! Prix total : 100 000 FCFA. Inscriptions ouvertes dès maintenant.',
-                  time: 'Il y a 5h',
+                  type: l10n.filterEvent,
+                  title: l10n.announcementTournamentTitle,
+                  body: l10n.announcementTournamentBody,
+                  time: l10n.time5h,
                   borderColor: Colors.pink,
+                  badgeUpper: l10n.badgeNewUpper,
                 ),
                 _AnnouncementCard(
-                  type: 'NEW Nouveauté',
-                  title: 'Nouveau système de récompenses',
-                  body:
-                      'Gagne des points de fidélité à chaque match et débloque des bonus exclusifs ! Plus tu joues, plus tu gagnes.',
-                  time: 'Il y a 1j',
-                  borderColor: Color(0xFF00BCD4),
+                  type: l10n.badgeNew,
+                  title: l10n.announcementRewardsTitle,
+                  body: l10n.announcementRewardsBody,
+                  time: l10n.time1d,
+                  borderColor: const Color(0xFF00BCD4),
+                  badgeUpper: l10n.badgeNewUpper,
                 ),
               ],
             ),
@@ -126,6 +129,7 @@ class _AnnouncementCard extends StatelessWidget {
     required this.body,
     required this.time,
     required this.borderColor,
+    required this.badgeUpper,
   });
 
   final String type;
@@ -133,6 +137,7 @@ class _AnnouncementCard extends StatelessWidget {
   final String body;
   final String time;
   final Color borderColor;
+  final String badgeUpper;
 
   @override
   Widget build(BuildContext context) {
@@ -165,9 +170,9 @@ class _AnnouncementCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                const Text(
-                  'NOUVEAU',
-                  style: TextStyle(
+                Text(
+                  badgeUpper,
+                  style: const TextStyle(
                     fontSize: 10,
                     color: Color(0xFF00BCD4),
                     fontWeight: FontWeight.bold,

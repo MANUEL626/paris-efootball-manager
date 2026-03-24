@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
+
 /// Page Tournois (depuis modale Événement / bannière).
 class TournamentsPage extends StatelessWidget {
   const TournamentsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Tournois'),
+        title: Text(l10n.tournamentsTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -24,14 +27,14 @@ class TournamentsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.emoji_events, color: Colors.amber, size: 32),
-                      SizedBox(width: 12),
+                      const Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Tournoi Hebdomadaire - 100 000 FCFA',
-                          style: TextStyle(
+                          l10n.eventModalTitle,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -42,7 +45,7 @@ class TournamentsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Le grand tournoi hebdomadaire commence vendredi ! Prix total : 100 000 FCFA. Inscriptions ouvertes dès maintenant.',
+                    l10n.tournamentWeeklyBlurb,
                     style: TextStyle(color: Colors.white.withOpacity(0.9)),
                   ),
                   const SizedBox(height: 16),
@@ -50,7 +53,7 @@ class TournamentsPage extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {},
-                      child: const Text('S\'inscrire au tournoi'),
+                      child: Text(l10n.registerTournament),
                     ),
                   ),
                 ],
@@ -59,20 +62,20 @@ class TournamentsPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Autres tournois',
+            l10n.otherTournaments,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           _TournamentTile(
-            title: 'Tournoi du week-end',
-            prize: '50 000 FCFA',
+            title: l10n.tournamentWeekend,
+            prize: l10n.prize50k,
             onTap: () {},
           ),
           _TournamentTile(
-            title: 'Défi du vendredi',
-            prize: '25 000 FCFA',
+            title: l10n.tournamentFriday,
+            prize: l10n.prize25k,
             onTap: () {},
           ),
         ],

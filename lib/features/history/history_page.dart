@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
+
 /// Page Historique : liste des défis passés.
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Historique')),
+      appBar: AppBar(title: Text(l10n.historyTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Vos derniers défis',
+            l10n.historyYourChallenges,
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
-            'Consultez l\'historique de tous vos défis.',
+            l10n.historySubtitle,
             style: TextStyle(color: Colors.white.withOpacity(0.8)),
           ),
           const SizedBox(height: 24),
           _HistoryTile(
-            result: 'Victoire',
+            result: l10n.resultWin,
             opponent: 'Joueur_123',
-            date: 'Il y a 2h',
+            date: l10n.ago2h,
             stake: '+500 SC',
             won: true,
           ),
           _HistoryTile(
-            result: 'Défaite',
+            result: l10n.resultLoss,
             opponent: 'Pro_Gamer',
-            date: 'Il y a 1j',
+            date: l10n.ago1d,
             stake: '-500 SC',
             won: false,
           ),

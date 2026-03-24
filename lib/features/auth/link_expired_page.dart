@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
 import '../../core/routes/app_routes.dart';
 
 /// Lien de confirmation expiré ou invalide (voir guide deep link).
@@ -8,8 +9,9 @@ class LinkExpiredPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Lien invalide')),
+      appBar: AppBar(title: Text(l10n.linkInvalidTitle)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -19,13 +21,13 @@ class LinkExpiredPage extends StatelessWidget {
               Icon(Icons.link_off, size: 64, color: Colors.amber.shade200),
               const SizedBox(height: 24),
               Text(
-                'Ce lien a expiré ou a déjà été utilisé.',
+                l10n.linkExpiredMessage,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
               Text(
-                'Demandez un nouveau mail de confirmation ou reconnectez-vous.',
+                l10n.linkExpiredHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white.withOpacity(0.8)),
               ),
@@ -35,7 +37,7 @@ class LinkExpiredPage extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context)
                       .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false),
-                  child: const Text('Retour à la connexion'),
+                  child: Text(l10n.backToLogin),
                 ),
               ),
             ],

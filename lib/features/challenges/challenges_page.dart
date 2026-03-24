@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
+
 /// Page Défis : trouver / créer des défis 1v1.
 class ChallengesPage extends StatelessWidget {
   const ChallengesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Défis'),
+        title: Text(l10n.challengesTitle),
         actions: [
           IconButton(icon: const Icon(Icons.filter_list), onPressed: () {}),
         ],
@@ -17,30 +20,33 @@ class ChallengesPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Trouver un défi',
+            l10n.findChallenge,
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
-            'Créez ou rejoignez un défi 1v1 et misez vos SkillCoins.',
+            l10n.findChallengeSubtitle,
             style: TextStyle(color: Colors.white.withOpacity(0.8)),
           ),
           const SizedBox(height: 24),
           _ChallengeCard(
-            title: 'Défi rapide 1v1',
-            stake: '500 SkillCoins',
+            title: l10n.challengeQuick,
+            stake: l10n.skillCoins500,
+            joinLabel: l10n.join,
             onJoin: () {},
           ),
           _ChallengeCard(
-            title: 'Défi intermédiaire',
-            stake: '1 000 SkillCoins',
+            title: l10n.challengeMedium,
+            stake: l10n.skillCoins1000,
+            joinLabel: l10n.join,
             onJoin: () {},
           ),
           _ChallengeCard(
-            title: 'Défi expert',
-            stake: '5 000 SkillCoins',
+            title: l10n.challengeExpert,
+            stake: l10n.skillCoins5000,
+            joinLabel: l10n.join,
             onJoin: () {},
           ),
         ],
@@ -48,7 +54,7 @@ class ChallengesPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         icon: const Icon(Icons.add),
-        label: const Text('Créer un défi'),
+        label: Text(l10n.createChallenge),
         backgroundColor: const Color(0xFF00BCD4),
       ),
     );
@@ -59,11 +65,13 @@ class _ChallengeCard extends StatelessWidget {
   const _ChallengeCard({
     required this.title,
     required this.stake,
+    required this.joinLabel,
     required this.onJoin,
   });
 
   final String title;
   final String stake;
+  final String joinLabel;
   final VoidCallback onJoin;
 
   @override
@@ -83,7 +91,7 @@ class _ChallengeCard extends StatelessWidget {
         ),
         trailing: ElevatedButton(
           onPressed: onJoin,
-          child: const Text('Rejoindre'),
+          child: Text(joinLabel),
         ),
       ),
     );
