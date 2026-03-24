@@ -7,13 +7,20 @@ import '../../features/auth/register_page.dart';
 import '../../features/challenges/challenges_page.dart';
 import '../../features/history/history_page.dart';
 import '../../features/home/main_shell.dart';
+import '../../features/onboarding/app_params_setup_page.dart';
+import '../../features/onboarding/app_params_transition_page.dart';
 import '../../features/onboarding/onboarding_page.dart';
+import '../../features/settings/settings_page.dart';
+import '../../features/profile/edit_profile_page.dart';
 import '../../features/profile/profile_page.dart';
 import '../../features/streaming/streaming_page.dart';
 import '../../features/tournaments/tournaments_page.dart';
 
 class AppRoutes {
   static const String onboarding = '/onboarding';
+  /// Court écran avant [paramsSetup] lorsque `is_params_done` == false.
+  static const String paramsTransition = '/params-transition';
+  static const String paramsSetup = '/params-setup';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
@@ -23,12 +30,18 @@ class AppRoutes {
   static const String history = '/history';
   static const String streaming = '/streaming';
   static const String profile = '/profile';
+  static const String editProfile = '/profile/edit';
+  static const String settingsRoute = '/settings';
   static const String linkExpired = '/link-expired';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case onboarding:
         return _build(const OnboardingPage());
+      case paramsTransition:
+        return _build(const AppParamsTransitionPage());
+      case paramsSetup:
+        return _build(const AppParamsSetupPage());
       case login:
         return _build(const LoginPage());
       case register:
@@ -47,6 +60,11 @@ class AppRoutes {
         return _build(const StreamingPage());
       case profile:
         return _build(const ProfilePage());
+      case editProfile:
+        final initial = settings.arguments as Map<String, dynamic>?;
+        return _build(EditProfilePage(initialProfile: initial));
+      case settingsRoute:
+        return _build(const SettingsPage());
       case linkExpired:
         return _build(const LinkExpiredPage());
       default:

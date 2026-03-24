@@ -48,6 +48,7 @@ app.*.map.json
 # Guide files (local documentation, not versioned)
 guide_page.md
 guide*
+pr_description.md
 
 # Local runtime secrets/config
 .env.local.json

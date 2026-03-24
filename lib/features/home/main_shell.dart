@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
 import '../challenges/challenges_page.dart';
 import '../history/history_page.dart';
 import '../profile/profile_page.dart';
@@ -17,16 +18,16 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  static const _navItems = [
-    (icon: Icons.home, label: 'Accueil'),
-    (icon: Icons.search, label: 'Défis'),
-    (icon: Icons.history, label: 'Historique'),
-    (icon: Icons.videocam, label: 'Streaming'),
-    (icon: Icons.person, label: 'Profil'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final navItems = [
+      (icon: Icons.home, label: l10n.navHome),
+      (icon: Icons.search, label: l10n.navChallenges),
+      (icon: Icons.history, label: l10n.navHistory),
+      (icon: Icons.videocam, label: l10n.navStreaming),
+      (icon: Icons.person, label: l10n.navProfile),
+    ];
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -45,7 +46,7 @@ class _MainShellState extends State<MainShell> {
         backgroundColor: const Color(0xFF0D1B2A),
         selectedItemColor: const Color(0xFF00BCD4),
         unselectedItemColor: Colors.white54,
-        items: _navItems
+        items: navItems
             .map(
               (e) =>
                   BottomNavigationBarItem(icon: Icon(e.icon), label: e.label),

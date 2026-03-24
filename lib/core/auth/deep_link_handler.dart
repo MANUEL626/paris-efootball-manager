@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'profile_gate_navigation.dart';
 import '../routes/app_routes.dart';
-import '../services/auth_service.dart';
+import '../services/auth_service.dart' show AuthService, PlayerProfileResult;
+import '../../l10n/app_localizations.dart';
 
 /// Erreurs dans l’URL (lien expiré, refus, etc.).
 bool isAuthDeepLinkError(Uri uri) {
@@ -43,8 +45,20 @@ Future<void> navigateAfterSessionFromUrl(
   if (session == null) return;
 
   final userId = session.user.id;
-  if (!await AuthService.instance.isUserPlayer(userId)) {
-    await Supabase.instance.client.auth.signOut();
+  final gate = await AuthService.instance.assertPlayerProfileWithRetries(
+    userId,
+    context: 'deep_link_after_oauth',
+  );
+  if (gate == PlayerProfileResult.ok ||
+      gate == PlayerProfileResult.okNeedsParams) {
+    pushNamedAndRemoveUntilAfterPlayerProfileCheck(
+      gate: gate,
+      navigatorKey: navigatorKey,
+    );
+    return;
+  }
+  if (gate == PlayerProfileResult.notAllowed) {
+    await AuthService.signOutSafe();
     navigatorKey.currentState?.pushNamedAndRemoveUntil(
       AppRoutes.login,
       (_) => false,
@@ -52,20 +66,33 @@ Future<void> navigateAfterSessionFromUrl(
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = navigatorKey.currentContext;
       if (ctx != null && ctx.mounted) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(
-            content: Text('Ce compte n’est pas un compte joueur.'),
-          ),
-        );
+        final l10n = AppLocalizations.of(ctx);
+        if (l10n != null) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(content: Text(l10n.profileNotAllowed)),
+          );
+        }
       }
     });
     return;
   }
 
+  await AuthService.signOutSafe();
   navigatorKey.currentState?.pushNamedAndRemoveUntil(
-    AppRoutes.home,
+    AppRoutes.login,
     (_) => false,
   );
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final ctx = navigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      final l10n = AppLocalizations.of(ctx);
+      if (l10n != null) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text(l10n.profileCheckFailed)),
+        );
+      }
+    }
+  });
 }
 
 Future<void> handleAuthDeepLink(

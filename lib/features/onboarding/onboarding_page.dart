@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/context_l10n.dart';
 import '../../core/routes/app_routes.dart';
 
 /// Onboarding : 2 slides (Défiez les Meilleurs, Gagnez des Tokens).
@@ -42,13 +43,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     const cyan = Color(0xFF00BCD4);
+    final l10n = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(onPressed: _skip, child: const Text('Passer')),
+              child: TextButton(onPressed: _skip, child: Text(l10n.skip)),
             ),
             Expanded(
               child: PageView(
@@ -57,16 +59,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 children: [
                   _OnboardingSlide(
                     icon: Icons.sports_esports,
-                    title: 'Défiez les Meilleurs',
-                    subtitle:
-                        'Créez des défis eFootball et affrontez des joueurs du monde entier',
+                    title: l10n.onboardingSlide1Title,
+                    subtitle: l10n.onboardingSlide1Subtitle,
                     color: cyan,
                   ),
                   _OnboardingSlide(
                     icon: Icons.account_balance_wallet,
-                    title: 'Gagnez des Tokens',
-                    subtitle:
-                        'Pariez, gagnez et retirez vos gains en toute sécurité',
+                    title: l10n.onboardingSlide2Title,
+                    subtitle: l10n.onboardingSlide2Subtitle,
                     color: Colors.amber,
                   ),
                 ],
@@ -86,11 +86,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _next,
-                  child: const Text('Suivant'),
+                  child: Text(l10n.next),
                 ),
               ),
             ),
-            TextButton(onPressed: _skip, child: const Text('Passer')),
+            TextButton(onPressed: _skip, child: Text(l10n.skip)),
             const SizedBox(height: 32),
           ],
         ),
@@ -133,9 +133,9 @@ class _OnboardingSlide extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
           ),
           const SizedBox(height: 16),
           Text(

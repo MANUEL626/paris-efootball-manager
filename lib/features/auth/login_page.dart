@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/auth/profile_gate_navigation.dart';
 import '../../core/config/app_config.dart';
+import '../../core/l10n/context_l10n.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/auth_service.dart';
 
@@ -19,68 +23,146 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _loading = false;
 
+  /// Évite les navigations doubles (listener auth + post-frame + délais).
+  bool _redirecting = false;
+
+  StreamSubscription<AuthState>? _authSub;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _redirectIfAlreadyLoggedIn());
-  }
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.session == null || !mounted) return;
+      switch (data.event) {
+        case AuthChangeEvent.signedIn:
+        case AuthChangeEvent.initialSession:
+          _tryEnterAppIfPlayer();
+          break;
+        default:
+          break;
+      }
+    });
 
-  /// Session déjà présente (stockage local Supabase) : pas besoin de se reconnecter → accueil.
-  Future<void> _redirectIfAlreadyLoggedIn() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null || !mounted) return;
-
-    if (await AuthService.instance.isUserPlayer(session.user.id)) {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryEnterAppIfPlayer();
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) _tryEnterAppIfPlayer();
+      });
+      Future<void>.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) _tryEnterAppIfPlayer();
+      });
+    });
   }
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Session présente : vérifie le profil (RPC avec retries). Échec → déconnexion.
+  /// Pendant « Se connecter », le listener auth ne doit pas lancer une 2ᵉ vérif en parallèle.
+  Future<void> _tryEnterAppIfPlayer() async {
+    if (_loading) return;
+    if (_redirecting || !mounted) return;
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) return;
+
+    _redirecting = true;
+    try {
+      final gate = await AuthService.instance.assertPlayerProfileWithRetries(
+        session.user.id,
+        context: 'login_session_listener',
+      );
+      if (!mounted) return;
+
+      if (gate == PlayerProfileResult.ok ||
+          gate == PlayerProfileResult.okNeedsParams) {
+        navigateAfterPlayerProfileCheck(gate: gate, context: context);
+        return;
+      }
+      if (gate == PlayerProfileResult.notAllowed) {
+        await AuthService.signOutSafe();
+        if (!mounted) return;
+        _toast(context.l10n.profileNotAllowed);
+        return;
+      }
+
+      await AuthService.signOutSafe();
+      if (!mounted) return;
+      _toast(context.l10n.profileCheckFailed);
+    } finally {
+      if (mounted) _redirecting = false;
+    }
   }
 
   Future<void> _onLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
-      _toast('Renseignez l’email et le mot de passe.');
+      _toast(context.l10n.fillEmailPassword);
       return;
     }
 
     setState(() => _loading = true);
     try {
+      AuthService.debugConnection('signInWithPassword démarrage');
       await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
       );
+      if (!mounted) return;
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
-        _toast('Connexion impossible.');
+        AuthService.debugConnection(
+          'signInWithPassword : currentUser null après succès apparent',
+        );
+        _toast(context.l10n.loginFailed);
         return;
       }
 
-      if (!await AuthService.instance.isUserPlayer(user.id)) {
-        await Supabase.instance.client.auth.signOut();
-        if (!mounted) return;
-        _toast('Seuls les comptes joueur peuvent se connecter.');
-        return;
-      }
-
+      AuthService.debugConnection(
+        'signInWithPassword OK → vérification profil (user=${user.id.substring(0, 8)}…)',
+      );
+      final gate = await AuthService.instance.assertPlayerProfileWithRetries(
+        user.id,
+        context: 'login_password_submit',
+      );
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-    } on AuthException catch (e) {
-      _toast(e.message.isNotEmpty ? e.message : 'Email ou mot de passe incorrect.');
-    } catch (e) {
+
+      if (gate == PlayerProfileResult.ok ||
+          gate == PlayerProfileResult.okNeedsParams) {
+        navigateAfterPlayerProfileCheck(gate: gate, context: context);
+        return;
+      }
+      if (gate == PlayerProfileResult.notAllowed) {
+        await AuthService.signOutSafe();
+        if (!mounted) return;
+        _toast(context.l10n.profileNotAllowed);
+        return;
+      }
+
+      await AuthService.signOutSafe();
+      if (!mounted) return;
+      _toast(context.l10n.profileCheckFailed);
+    } on AuthException catch (e, st) {
+      AuthService.debugConnection(
+        'signInWithPassword AuthException',
+        error: e,
+        stackTrace: st,
+      );
+      _toast(e.message.isNotEmpty ? e.message : context.l10n.wrongPassword);
+    } catch (e, st) {
+      AuthService.debugConnection(
+        'signInWithPassword erreur inattendue',
+        error: e,
+        stackTrace: st,
+      );
       final s = e.toString();
       if (s.contains('520') || s.contains('502') || s.contains('503')) {
-        _toast(
-          'Serveur temporairement indisponible (erreur réseau). '
-          'Si vous êtes déjà connecté, redémarrez l’app ou réessayez plus tard.',
-        );
+        _toast(context.l10n.serverTemporarilyUnavailable);
       } else {
         _toast(s);
       }
@@ -110,6 +192,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     const cyan = Color(0xFF00BCD4);
+    final l10n = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -120,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
               Icon(Icons.sports_soccer, size: 64, color: cyan),
               const SizedBox(height: 24),
               Text(
-                'Bienvenue !',
+                l10n.loginWelcome,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -128,16 +211,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Connectez-vous pour continuer',
+                l10n.loginSubtitle,
                 style: TextStyle(color: Colors.white.withOpacity(0.8)),
               ),
               const SizedBox(height: 40),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.white54),
+                decoration: InputDecoration(
+                  labelText: l10n.email,
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.white54),
                 ),
               ),
               const SizedBox(height: 16),
@@ -145,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'Mot de passe',
+                  labelText: l10n.password,
                   prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -167,41 +250,41 @@ class _LoginPageState extends State<LoginPage> {
                           width: 22,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Se connecter'),
+                      : Text(l10n.signIn),
                 ),
               ),
               const SizedBox(height: 24),
-              Text('OU', style: TextStyle(color: Colors.white.withOpacity(0.6))),
+              Text(l10n.orDivider, style: TextStyle(color: Colors.white.withOpacity(0.6))),
               const SizedBox(height: 24),
               _SocialButton(
                 icon: Icons.phone,
-                label: 'Connexion par téléphone',
+                label: l10n.phoneLoginSoon,
                 onPressed: _loading
                     ? null
-                    : () => _toast('Bientôt disponible.'),
+                    : () => _toast(l10n.phoneLoginSoon),
               ),
               const SizedBox(height: 12),
               _SocialButton(
                 icon: Icons.g_mobiledata,
-                label: 'Connexion avec Google',
+                label: l10n.signInWithGoogle,
                 onPressed: _loading ? null : () => _oauth(OAuthProvider.google),
               ),
               const SizedBox(height: 12),
               _SocialButton(
                 icon: Icons.facebook,
-                label: 'Connexion avec Facebook',
+                label: l10n.signInWithFacebook,
                 onPressed: _loading ? null : () => _oauth(OAuthProvider.facebook),
               ),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Pas encore de compte ? ', style: TextStyle(color: Colors.white.withOpacity(0.8))),
+                  Text(l10n.noAccount, style: TextStyle(color: Colors.white.withOpacity(0.8))),
                   TextButton(
                     onPressed: _loading
                         ? null
                         : () => Navigator.of(context).pushNamed(AppRoutes.register),
-                    child: const Text("S'inscrire"),
+                    child: Text(l10n.signUp),
                   ),
                 ],
               ),

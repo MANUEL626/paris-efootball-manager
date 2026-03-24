@@ -14,6 +14,14 @@ class AppConfig {
   static String supabaseUrl = '';
   static String supabaseAnonKey = '';
   static String apiBaseUrl = '';
+  /// Même valeur que `INTERNAL_API_BEARER` côté FastAPI (header profil agrégé).
+  static String internalApiBearer = '';
+
+  /// Secret pour `GET /api/v1/auth/profile/...` — si vide, aligné sur le défaut serveur : `dev-internal-bearer`.
+  static String get effectiveInternalApiBearer {
+    final t = internalApiBearer.trim();
+    return t.isEmpty ? 'dev-internal-bearer' : t;
+  }
 
   /// Même schéma que dans Android / iOS (deep link OAuth + confirmation email).
   static const String oauthRedirectUri =
@@ -31,11 +39,13 @@ class AppConfig {
     const fromEnvUrl = String.fromEnvironment('SUPABASE_URL');
     const fromEnvKey = String.fromEnvironment('SUPABASE_ANON_KEY');
     const fromEnvApi = String.fromEnvironment('API_BASE_URL');
+    const fromEnvInternalBearer = String.fromEnvironment('INTERNAL_API_BEARER');
 
     if (fromEnvUrl.isNotEmpty && fromEnvKey.isNotEmpty) {
       supabaseUrl = fromEnvUrl;
       supabaseAnonKey = fromEnvKey;
       apiBaseUrl = fromEnvApi;
+      internalApiBearer = fromEnvInternalBearer;
       return;
     }
 
@@ -50,6 +60,8 @@ class AppConfig {
       supabaseUrl = (j['SUPABASE_URL'] as String?)?.trim() ?? '';
       supabaseAnonKey = (j['SUPABASE_ANON_KEY'] as String?)?.trim() ?? '';
       apiBaseUrl = (j['API_BASE_URL'] as String?)?.trim() ?? '';
+      internalApiBearer =
+          (j['INTERNAL_API_BEARER'] as String?)?.trim() ?? '';
     } catch (_) {
       // Asset absent ou JSON invalide : laisser vide.
     }
